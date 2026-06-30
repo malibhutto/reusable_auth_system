@@ -1,0 +1,284 @@
+/* Reusable UI Components Styling */
+
+/* 1. Global Loading Spinner */
+.spinner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-backdrop);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.spinner-circle {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--border-color);
+  border-top: 4px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.spinner-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* 2. Theme Toggle Switch */
+.theme-toggle-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  font-size: 20px;
+  transition: all var(--transition-speed) var(--transition-timing);
+}
+
+.theme-toggle-btn:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-md);
+  color: var(--color-primary);
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+/* 3. Toast Notification Alert Manager */
+.toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 10000;
+  max-width: 380px;
+  width: 100%;
+}
+
+@media (max-width: 480px) {
+  .toast-container {
+    top: auto;
+    bottom: 24px;
+    right: 12px;
+    left: 12px;
+    max-width: none;
+    width: auto;
+  }
+}
+
+.toast-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background-color: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--glass-border);
+  animation: slideIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  position: relative;
+  overflow: hidden;
+}
+
+.toast-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+}
+
+.toast-item.toast-success::before {
+  background-color: var(--color-success);
+}
+.toast-item.toast-error::before {
+  background-color: var(--color-danger);
+}
+.toast-item.toast-info::before {
+  background-color: var(--color-primary);
+}
+.toast-item.toast-warning::before {
+  background-color: var(--color-warning);
+}
+
+.toast-icon {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-success .toast-icon { color: var(--color-success); }
+.toast-error .toast-icon { color: var(--color-danger); }
+.toast-info .toast-icon { color: var(--color-primary); }
+.toast-warning .toast-icon { color: var(--color-warning); }
+
+.toast-content {
+  flex: 1;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.toast-close-btn {
+  font-size: 16px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border-radius: 4px;
+}
+
+.toast-close-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--border-color);
+}
+
+/* 4. Password Strength Meter */
+.strength-meter-wrapper {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.strength-meter-track {
+  height: 6px;
+  background-color: var(--border-color);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.strength-meter-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 3px;
+  transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
+}
+
+.strength-text {
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Strength Colors */
+.strength-0 .strength-meter-bar { width: 0%; }
+.strength-1 .strength-meter-bar { width: 25%; background-color: var(--color-danger); }
+.strength-2 .strength-meter-bar { width: 50%; background-color: var(--color-warning); }
+.strength-3 .strength-meter-bar { width: 75%; background-color: #3b82f6; }
+.strength-4 .strength-meter-bar { width: 100%; background-color: var(--color-success); }
+
+.strength-0 .strength-label { color: var(--text-muted); }
+.strength-1 .strength-label { color: var(--color-danger); }
+.strength-2 .strength-label { color: var(--color-warning); }
+.strength-3 .strength-label { color: #3b82f6; }
+.strength-4 .strength-label { color: var(--color-success); }
+
+/* 5. Reusable Modal Container */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-backdrop);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 16px;
+}
+
+.modal-content {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  max-width: 500px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.modal-close {
+  font-size: 20px;
+  color: var(--text-muted);
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 24px;
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-secondary {
+  padding: 8px 16px;
+  font-size: 14.5px;
+  font-weight: 500;
+  border-radius: var(--border-radius-sm);
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background-color: var(--border-color);
+}

@@ -1,0 +1,42 @@
+{
+  "name": "auth-backend",
+  "version": "1.0.0",
+  "description": "Universal Authentication System - Backend",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "prisma:generate": "prisma generate --schema=src/prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate dev --schema=src/prisma/schema.prisma",
+    "prisma:deploy": "prisma migrate deploy --schema=src/prisma/schema.prisma",
+    "prisma:seed": "node src/prisma/seed.js"
+  },
+  "keywords": [
+    "auth",
+    "express",
+    "prisma",
+    "jwt",
+    "otp",
+    "nodemailer"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^5.16.1",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.3.1",
+    "express-validator": "^7.1.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.9.14"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4",
+    "prisma": "^5.22.0"
+  }
+}
