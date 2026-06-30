@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import '../styles/components.css';
+import React, { useEffect, useState } from "react";
+import "../styles/components.css";
 
 export const ThemeToggle = () => {
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('theme') || 'light';
+    return localStorage.getItem("theme") || "light";
   });
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
   return (
@@ -22,7 +22,7 @@ export const ThemeToggle = () => {
       aria-label="Toggle Theme"
       id="theme-toggle"
     >
-      {theme === 'light' ? '🌙' : '☀️'}
+      {theme === "light" ? "🌙" : "☀️"}
     </button>
   );
 };

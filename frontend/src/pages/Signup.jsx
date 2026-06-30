@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth.js';
-import { useToast } from '../components/Toast.jsx';
-import ThemeToggle from '../components/ThemeToggle.jsx';
-import PasswordStrengthMeter from '../components/PasswordStrengthMeter.jsx';
-import ShowHidePassword from '../components/ShowHidePassword.jsx';
-import LoadingSpinner from '../components/LoadingSpinner.jsx';
-import '../styles/auth.css';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth.js";
+import { useToast } from "../components/Toast.jsx";
+import ThemeToggle from "../components/ThemeToggle.jsx";
+import PasswordStrengthMeter from "../components/PasswordStrengthMeter.jsx";
+import ShowHidePassword from "../components/ShowHidePassword.jsx";
+import LoadingSpinner from "../components/LoadingSpinner.jsx";
+import "../styles/auth.css";
 
 export const Signup = () => {
   const { signup } = useAuth();
@@ -14,12 +14,12 @@ export const Signup = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    dob: '',
-    password: '',
-    confirmPassword: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    dob: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -33,7 +33,10 @@ export const Signup = () => {
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
       age--;
     }
     return age;
@@ -41,61 +44,64 @@ export const Signup = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     // First Name
     if (!formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
+      newErrors.firstName = "First name is required";
     } else if (!/^[A-Za-z\s]+$/.test(formData.firstName)) {
-      newErrors.firstName = 'First name must contain only alphabets';
+      newErrors.firstName = "First name must contain only alphabets";
     }
 
     // Last Name
     if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
+      newErrors.lastName = "Last name is required";
     } else if (!/^[A-Za-z\s]+$/.test(formData.lastName)) {
-      newErrors.lastName = 'Last name must contain only alphabets';
+      newErrors.lastName = "Last name must contain only alphabets";
     }
 
     // Email
     if (!formData.email.trim()) {
-      newErrors.email = 'Email address is required';
+      newErrors.email = "Email address is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please provide a valid email address';
+      newErrors.email = "Please provide a valid email address";
     }
 
     // DOB & Age limit
     if (!formData.dob) {
-      newErrors.dob = 'Date of birth is required';
+      newErrors.dob = "Date of birth is required";
     } else {
       const age = calculateAge(formData.dob);
       if (age < 13) {
-        newErrors.dob = 'You must be at least 13 years old to register';
+        newErrors.dob = "You must be at least 13 years old to register";
       }
     }
 
     // Password Complexity
     const pass = formData.password;
     if (!pass) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else {
       if (pass.length < 8) {
-        newErrors.password = 'Password must be at least 8 characters long';
+        newErrors.password = "Password must be at least 8 characters long";
       } else if (!/[A-Z]/.test(pass)) {
-        newErrors.password = 'Password must contain at least one uppercase letter';
+        newErrors.password =
+          "Password must contain at least one uppercase letter";
       } else if (!/[a-z]/.test(pass)) {
-        newErrors.password = 'Password must contain at least one lowercase letter';
+        newErrors.password =
+          "Password must contain at least one lowercase letter";
       } else if (!/[0-9]/.test(pass)) {
-        newErrors.password = 'Password must contain at least one number';
+        newErrors.password = "Password must contain at least one number";
       } else if (!/[^A-Za-z0-9]/.test(pass)) {
-        newErrors.password = 'Password must contain at least one special character';
+        newErrors.password =
+          "Password must contain at least one special character";
       }
     }
 
     // Confirm Password
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Confirm password is required';
+      newErrors.confirmPassword = "Confirm password is required";
     } else if (formData.confirmPassword !== formData.password) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = "Passwords do not match";
     }
 
     setErrors(newErrors);
@@ -107,7 +113,7 @@ export const Signup = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     // Clear error for field on change
     if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
@@ -118,10 +124,13 @@ export const Signup = () => {
     setIsSubmitting(true);
     try {
       await signup(formData);
-      addToast('Account created successfully! Verification code sent to email.', 'success');
+      addToast(
+        "Account created successfully! Verification code sent to email.",
+        "success",
+      );
       navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`);
     } catch (err) {
-      addToast(err.message, 'error');
+      addToast(err.message, "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -143,75 +152,91 @@ export const Signup = () => {
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label" htmlFor="firstName">First Name</label>
+              <label className="form-label" htmlFor="firstName">
+                First Name
+              </label>
               <input
                 type="text"
                 id="firstName"
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleInputChange}
-                className={`form-input ${errors.firstName ? 'input-error' : ''}`}
+                className={`form-input ${errors.firstName ? "input-error" : ""}`}
                 placeholder="John"
                 required
               />
-              {errors.firstName && <span className="error-message">{errors.firstName}</span>}
+              {errors.firstName && (
+                <span className="error-message">{errors.firstName}</span>
+              )}
             </div>
 
             <div className="form-group">
-              <label className="form-label" htmlFor="lastName">Last Name</label>
+              <label className="form-label" htmlFor="lastName">
+                Last Name
+              </label>
               <input
                 type="text"
                 id="lastName"
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleInputChange}
-                className={`form-input ${errors.lastName ? 'input-error' : ''}`}
+                className={`form-input ${errors.lastName ? "input-error" : ""}`}
                 placeholder="Doe"
                 required
               />
-              {errors.lastName && <span className="error-message">{errors.lastName}</span>}
+              {errors.lastName && (
+                <span className="error-message">{errors.lastName}</span>
+              )}
             </div>
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="email">Email Address</label>
+            <label className="form-label" htmlFor="email">
+              Email Address
+            </label>
             <input
               type="email"
               id="email"
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              className={`form-input ${errors.email ? 'input-error' : ''}`}
+              className={`form-input ${errors.email ? "input-error" : ""}`}
               placeholder="john.doe@example.com"
               required
             />
-            {errors.email && <span className="error-message">{errors.email}</span>}
+            {errors.email && (
+              <span className="error-message">{errors.email}</span>
+            )}
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="dob">Date of Birth</label>
+            <label className="form-label" htmlFor="dob">
+              Date of Birth
+            </label>
             <input
               type="date"
               id="dob"
               name="dob"
               value={formData.dob}
               onChange={handleInputChange}
-              className={`form-input ${errors.dob ? 'input-error' : ''}`}
+              className={`form-input ${errors.dob ? "input-error" : ""}`}
               required
             />
             {errors.dob && <span className="error-message">{errors.dob}</span>}
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="password">Password</label>
+            <label className="form-label" htmlFor="password">
+              Password
+            </label>
             <div className="input-container">
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className={`form-input ${errors.password ? 'input-error' : ''}`}
+                className={`form-input ${errors.password ? "input-error" : ""}`}
                 placeholder="••••••••"
                 required
               />
@@ -220,20 +245,26 @@ export const Signup = () => {
                 onToggle={() => setShowPassword((prev) => !prev)}
               />
             </div>
-            {formData.password && <PasswordStrengthMeter password={formData.password} />}
-            {errors.password && <span className="error-message">{errors.password}</span>}
+            {formData.password && (
+              <PasswordStrengthMeter password={formData.password} />
+            )}
+            {errors.password && (
+              <span className="error-message">{errors.password}</span>
+            )}
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="confirmPassword">Confirm Password</label>
+            <label className="form-label" htmlFor="confirmPassword">
+              Confirm Password
+            </label>
             <div className="input-container">
               <input
-                type={showConfirmPassword ? 'text' : 'password'}
+                type={showConfirmPassword ? "text" : "password"}
                 id="confirmPassword"
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                className={`form-input ${errors.confirmPassword ? 'input-error' : ''}`}
+                className={`form-input ${errors.confirmPassword ? "input-error" : ""}`}
                 placeholder="••••••••"
                 required
               />

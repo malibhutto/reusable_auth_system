@@ -1,7 +1,7 @@
-import React from 'react';
-import '../styles/components.css';
+import React from "react";
+import "../styles/components.css";
 
-export const LoadingSpinner = ({ message = 'Please wait...' }) => {
+export const LoadingSpinner = ({ message = "Please wait..." }) => {
   return (
     <div className="spinner-overlay" id="global-loading-spinner">
       <div className="spinner-container">

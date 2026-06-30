@@ -1,4 +1,4 @@
-@import './theme.css';
+@import "./theme.css";
 
 * {
   box-sizing: border-box;
@@ -10,8 +10,9 @@ body {
   font-family: var(--font-primary);
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  transition: background-color var(--transition-speed) var(--transition-timing),
-              color var(--transition-speed) var(--transition-timing);
+  transition:
+    background-color var(--transition-speed) var(--transition-timing),
+    color var(--transition-speed) var(--transition-timing);
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -26,7 +27,9 @@ a {
   color: var(--color-primary);
   text-decoration: none;
   font-weight: 500;
-  transition: color 0.2s ease, text-shadow 0.2s ease;
+  transition:
+    color 0.2s ease,
+    text-shadow 0.2s ease;
 }
 
 a:hover {
@@ -34,7 +37,10 @@ a:hover {
   text-shadow: 0 0 1px rgba(var(--color-primary-rgb), 0.3);
 }
 
-input, button, select, textarea {
+input,
+button,
+select,
+textarea {
   font-family: var(--font-primary);
 }
 
@@ -88,8 +94,12 @@ button {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes slideIn {
@@ -104,8 +114,13 @@ button {
 }
 
 @keyframes pulseGlow {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 0.9; }
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.9;
+  }
 }
 
 .fade-in {

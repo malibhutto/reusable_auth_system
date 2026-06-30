@@ -99,7 +99,7 @@ export const getVerificationEmailTemplate = (firstName, otpCode) => {
               <div class="otp-code">${otpCode}</div>
             </div>
             <div class="warning">
-              <strong>Important:</strong> This verification code is valid for exactly <strong>2 minutes</strong>. If it expires, you will need to request a new one from the verification screen.
+              <strong>Important:</strong> This verification code is valid for exactly <strong>${process.env.OTP_EXPIRES} minutes</strong>. If it expires, you will need to request a new one from the verification screen.
             </div>
             <p style="margin-top: 24px; font-size: 14px; color: #64748b;">If you did not create this account, you can safely ignore this email.</p>
           </div>
@@ -213,7 +213,7 @@ export const getForgotPasswordEmailTemplate = (firstName, otpCode) => {
               <div class="otp-code">${otpCode}</div>
             </div>
             <div class="warning">
-              <strong>Important:</strong> This recovery code is valid for exactly <strong>2 minutes</strong>. If it expires, you will need to request a new reset code.
+              <strong>Important:</strong> This recovery code is valid for exactly <strong>${process.env.OTP_EXPIRES} minutes</strong>. If it expires, you will need to request a new reset code.
             </div>
             <p style="margin-top: 24px; font-size: 14px; color: #64748b;">If you did not request a password reset, you can safely ignore this email and your password will remain unchanged.</p>
           </div>

@@ -1,7 +1,15 @@
-import prisma from '../config/db.js';
-import { hashPassword, comparePassword, hashOtp, generateNumericOtp } from '../utils/hash.js';
-import emailService from './emailService.js';
-import tokenService from './tokenService.js';
+import prisma from "../config/db.js";
+import {
+  hashPassword,
+  comparePassword,
+  hashOtp,
+  generateNumericOtp,
+} from "../utils/hash.js";
+import emailService from "./emailService.js";
+import tokenService from "./tokenService.js";
+
+const otpExpiryMinutes = Number(process.env.OTP_EXPIRES) || 10;
+const otpExpiryMs = otpExpiryMinutes * 60 * 1000;
 
 /**
  * Remove sensitive password field from user objects.
@@ -21,7 +29,7 @@ export const signup = async (userData) => {
   // Double-check if email already exists
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
-    throw new Error('Email is already registered');
+    throw new Error("Email is already registered");
   }
 
   // Calculate age from Date of Birth
@@ -29,12 +37,15 @@ export const signup = async (userData) => {
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
     age--;
   }
 
   if (age < 13) {
-    throw new Error('You must be at least 13 years old to register');
+    throw new Error("You must be at least 13 years old to register");
   }
 
   // Hash password
@@ -55,17 +66,19 @@ export const signup = async (userData) => {
   // Generate OTP
   const otp = generateNumericOtp();
   const hashedOtpVal = hashOtp(otp);
-  const expiresAt = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes
+  const expiresAt = new Date(Date.now() + otpExpiryMs);
 
   // Save OTP in Database
   await prisma.otp.create({
     data: {
       userId: user.id,
       otp: hashedOtpVal,
-      type: 'VERIFICATION',
+      type: "VERIFICATION",
       expiresAt,
     },
   });
+  // console.log("date now", new Date().toISOString());
+  // console.log("expire at", expiresAt.toISOString());
 
   // Send verification email
   await emailService.sendVerificationEmail(user.email, user.firstName, otp);
@@ -79,34 +92,33 @@ export const signup = async (userData) => {
 export const verifyEmail = async (email, otpCode) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
-    throw new Error('User not found');
+    throw new Error("User not found");
   }
 
   if (user.isVerified) {
-    throw new Error('Email is already verified');
+    throw new Error("Email is already verified");
   }
 
   const hashedOtpVal = hashOtp(otpCode);
-  
+
   // Find valid OTP
   const otpRecord = await prisma.otp.findFirst({
     where: {
       userId: user.id,
       otp: hashedOtpVal,
-      type: 'VERIFICATION',
+      type: "VERIFICATION",
       isUsed: false,
       expiresAt: { gt: new Date() },
     },
   });
 
   if (!otpRecord) {
-    throw new Error('Invalid or expired verification code');
+    throw new Error("Invalid or expired verification code");
   }
 
-  // Mark OTP as used
-  await prisma.otp.update({
+  // Remove OTP after successful verification
+  await prisma.otp.delete({
     where: { id: otpRecord.id },
-    data: { isUsed: true },
   });
 
   // Mark User as verified
@@ -124,29 +136,29 @@ export const verifyEmail = async (email, otpCode) => {
 export const resendVerification = async (email) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
-    throw new Error('User not found');
+    throw new Error("User not found");
   }
 
   if (user.isVerified) {
-    throw new Error('Email is already verified');
+    throw new Error("Email is already verified");
   }
 
   // Invalidate previous verification OTPs
   await prisma.otp.updateMany({
-    where: { userId: user.id, type: 'VERIFICATION', isUsed: false },
+    where: { userId: user.id, type: "VERIFICATION", isUsed: false },
     data: { isUsed: true },
   });
 
   // Generate new OTP
   const otp = generateNumericOtp();
   const hashedOtpVal = hashOtp(otp);
-  const expiresAt = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes
+  const expiresAt = new Date(Date.now() + otpExpiryMs);
 
   await prisma.otp.create({
     data: {
       userId: user.id,
       otp: hashedOtpVal,
-      type: 'VERIFICATION',
+      type: "VERIFICATION",
       expiresAt,
     },
   });
@@ -161,18 +173,18 @@ export const resendVerification = async (email) => {
 export const login = async (email, password) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
-    throw new Error('Invalid email or password');
+    throw new Error("Invalid email or password");
   }
 
   // Verify password
   const isMatch = await comparePassword(password, user.password);
   if (!isMatch) {
-    throw new Error('Invalid email or password');
+    throw new Error("Invalid email or password");
   }
 
   // Enforce email verification before login
   if (!user.isVerified) {
-    throw new Error('Email is not verified. Please verify your email first.');
+    throw new Error("Email is not verified. Please verify your email first.");
   }
 
   // Generate Tokens
@@ -194,31 +206,63 @@ export const forgotPassword = async (email) => {
 
   // Safe fallback if user doesn't exist
   if (!user) {
-    console.log(`🔍 [Enum Protection] Forgot Password requested for non-existent email: ${email}`);
+    console.log(
+      `🔍 [Enum Protection] Forgot Password requested for non-existent email: ${email}`,
+    );
     return true; // Return true as if successful
   }
 
   // Invalidate older password reset OTPs
   await prisma.otp.updateMany({
-    where: { userId: user.id, type: 'PASSWORD_RESET', isUsed: false },
+    where: { userId: user.id, type: "PASSWORD_RESET", isUsed: false },
     data: { isUsed: true },
   });
 
   // Generate new OTP
   const otp = generateNumericOtp();
   const hashedOtpVal = hashOtp(otp);
-  const expiresAt = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes
+  const expiresAt = new Date(Date.now() + otpExpiryMs); // 10 minutes
 
   await prisma.otp.create({
     data: {
       userId: user.id,
       otp: hashedOtpVal,
-      type: 'PASSWORD_RESET',
+      type: "PASSWORD_RESET",
       expiresAt,
     },
   });
 
+  // console.log("password reset request created at", new Date().toISOString());
+  // console.log("password reset expires at", expiresAt.toISOString());
+
   await emailService.sendForgotPasswordEmail(user.email, user.firstName, otp);
+  return true;
+};
+
+/**
+ * Verify password reset OTP without changing the password.
+ */
+export const verifyPasswordReset = async (email, otpCode) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const hashedOtpVal = hashOtp(otpCode);
+  const otpRecord = await prisma.otp.findFirst({
+    where: {
+      userId: user.id,
+      otp: hashedOtpVal,
+      type: "PASSWORD_RESET",
+      isUsed: false,
+      expiresAt: { gt: new Date() },
+    },
+  });
+
+  if (!otpRecord) {
+    throw new Error("Invalid or expired recovery code");
+  }
+
   return true;
 };
 
@@ -228,7 +272,7 @@ export const forgotPassword = async (email) => {
 export const resetPassword = async (email, otpCode, newPassword) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
-    throw new Error('User not found');
+    throw new Error("User not found");
   }
 
   const hashedOtpVal = hashOtp(otpCode);
@@ -238,14 +282,14 @@ export const resetPassword = async (email, otpCode, newPassword) => {
     where: {
       userId: user.id,
       otp: hashedOtpVal,
-      type: 'PASSWORD_RESET',
+      type: "PASSWORD_RESET",
       isUsed: false,
       expiresAt: { gt: new Date() },
     },
   });
 
   if (!otpRecord) {
-    throw new Error('Invalid or expired password recovery code');
+    throw new Error("Invalid or expired password recovery code");
   }
 
   // Hash new password
@@ -257,10 +301,9 @@ export const resetPassword = async (email, otpCode, newPassword) => {
     data: { password: hashedPassword },
   });
 
-  // Mark OTP as used
-  await prisma.otp.update({
+  // Remove OTP after successful password reset
+  await prisma.otp.delete({
     where: { id: otpRecord.id },
-    data: { isUsed: true },
   });
 
   // Security best practice: Revoke all existing sessions (Force relog)
@@ -281,12 +324,12 @@ export const refreshSession = async (oldRefreshToken) => {
     });
 
     if (!dbToken) {
-      throw new Error('Refresh token not found or revoked');
+      throw new Error("Refresh token not found or revoked");
     }
 
     if (new Date() > dbToken.expiresAt) {
       await tx.refreshToken.delete({ where: { token: oldRefreshToken } });
-      throw new Error('Refresh token expired');
+      throw new Error("Refresh token expired");
     }
 
     // 2. Delete old refresh token (single use / rotation)
@@ -299,7 +342,8 @@ export const refreshSession = async (oldRefreshToken) => {
 
   // 3. Generate new session tokens
   const newAccessToken = tokenService.generateAccessToken(userRecord);
-  const newRefreshToken = await tokenService.generateAndStoreRefreshToken(userRecord);
+  const newRefreshToken =
+    await tokenService.generateAndStoreRefreshToken(userRecord);
 
   return {
     accessToken: newAccessToken,
@@ -314,7 +358,7 @@ export const refreshSession = async (oldRefreshToken) => {
 export const getUserProfile = async (userId) => {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) {
-    throw new Error('User not found');
+    throw new Error("User not found");
   }
   return excludePassword(user);
 };
@@ -324,6 +368,7 @@ export default {
   resendVerification,
   login,
   forgotPassword,
+  verifyPasswordReset,
   resetPassword,
   refreshSession,
   getUserProfile,

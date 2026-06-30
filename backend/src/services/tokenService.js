@@ -1,32 +1,38 @@
-import jwt from 'jsonwebtoken';
-import prisma from '../config/db.js';
+import jwt from "jsonwebtoken";
+import prisma from "../config/db.js";
 
 // Load secrets with fallbacks
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-jwt-secret';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'fallback-jwt-refresh-secret';
-const ACCESS_TOKEN_EXPIRES = process.env.ACCESS_TOKEN_EXPIRES || '15m';
-const REFRESH_TOKEN_EXPIRES = process.env.REFRESH_TOKEN_EXPIRES || '7d';
+const JWT_SECRET = process.env.JWT_SECRET || "fallback-jwt-secret";
+const JWT_REFRESH_SECRET =
+  process.env.JWT_REFRESH_SECRET || "fallback-jwt-refresh-secret";
+const ACCESS_TOKEN_EXPIRES = process.env.ACCESS_TOKEN_EXPIRES || "15m";
+const REFRESH_TOKEN_EXPIRES = process.env.REFRESH_TOKEN_EXPIRES || "7d";
 
 /**
  * Parse time string (e.g., '15m', '7d') into milliseconds.
- * @param {string} duration 
+ * @param {string} duration
  * @returns {number}
  */
 const parseDurationToMs = (duration) => {
   const value = parseInt(duration, 10);
   const unit = duration.slice(-1).toLowerCase();
   switch (unit) {
-    case 's': return value * 1000;
-    case 'm': return value * 60 * 1000;
-    case 'h': return value * 60 * 60 * 1000;
-    case 'd': return value * 24 * 60 * 60 * 1000;
-    default: return 7 * 24 * 60 * 60 * 1000; // default 7 days
+    case "s":
+      return value * 1000;
+    case "m":
+      return value * 60 * 1000;
+    case "h":
+      return value * 60 * 60 * 1000;
+    case "d":
+      return value * 24 * 60 * 60 * 1000;
+    default:
+      return 7 * 24 * 60 * 60 * 1000; // default 7 days
   }
 };
 
 /**
  * Generate a standard short-lived Access Token.
- * @param {object} user 
+ * @param {object} user
  * @returns {string}
  */
 export const generateAccessToken = (user) => {
@@ -35,24 +41,22 @@ export const generateAccessToken = (user) => {
       id: user.id,
       email: user.email,
       firstName: user.firstName,
-      lastName: user.lastName
+      lastName: user.lastName,
     },
     JWT_SECRET,
-    { expiresIn: ACCESS_TOKEN_EXPIRES }
+    { expiresIn: ACCESS_TOKEN_EXPIRES },
   );
 };
 
 /**
  * Generate a long-lived Refresh Token and store it in the database.
- * @param {object} user 
+ * @param {object} user
  * @returns {Promise<string>}
  */
 export const generateAndStoreRefreshToken = async (user) => {
-  const token = jwt.sign(
-    { id: user.id },
-    JWT_REFRESH_SECRET,
-    { expiresIn: REFRESH_TOKEN_EXPIRES }
-  );
+  const token = jwt.sign({ id: user.id }, JWT_REFRESH_SECRET, {
+    expiresIn: REFRESH_TOKEN_EXPIRES,
+  });
 
   const ms = parseDurationToMs(REFRESH_TOKEN_EXPIRES);
   const expiresAt = new Date(Date.now() + ms);
@@ -70,7 +74,7 @@ export const generateAndStoreRefreshToken = async (user) => {
 
 /**
  * Verify an Access Token.
- * @param {string} token 
+ * @param {string} token
  * @returns {object} - Decoded token payload
  */
 export const verifyAccessToken = (token) => {
@@ -79,7 +83,7 @@ export const verifyAccessToken = (token) => {
 
 /**
  * Verify a Refresh Token and check if it exists in the database.
- * @param {string} token 
+ * @param {string} token
  * @returns {Promise<object>} - Decoded payload if valid
  */
 export const verifyRefreshToken = async (token) => {
@@ -91,13 +95,13 @@ export const verifyRefreshToken = async (token) => {
   });
 
   if (!tokenRecord) {
-    throw new Error('Refresh token not found in database');
+    throw new Error("Refresh token not found in database");
   }
 
   if (new Date() > tokenRecord.expiresAt) {
     // Clean up expired token
     await prisma.refreshToken.delete({ where: { token } });
-    throw new Error('Refresh token expired');
+    throw new Error("Refresh token expired");
   }
 
   return { decoded, tokenRecord };
@@ -105,7 +109,7 @@ export const verifyRefreshToken = async (token) => {
 
 /**
  * Revoke/Delete a specific Refresh Token from the database.
- * @param {string} token 
+ * @param {string} token
  */
 export const revokeRefreshToken = async (token) => {
   try {
@@ -119,7 +123,7 @@ export const revokeRefreshToken = async (token) => {
 
 /**
  * Revoke/Delete all Refresh Tokens for a specific user.
- * @param {string} userId 
+ * @param {string} userId
  */
 export const revokeAllUserRefreshTokens = async (userId) => {
   await prisma.refreshToken.deleteMany({
@@ -135,11 +139,11 @@ export const revokeAllUserRefreshTokens = async (userId) => {
 export const setRefreshTokenCookie = (res, token) => {
   const ms = parseDurationToMs(REFRESH_TOKEN_EXPIRES);
 
-  res.cookie('refreshToken', token, {
+  res.cookie("refreshToken", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
     maxAge: ms,
   });
 };
@@ -149,11 +153,11 @@ export const setRefreshTokenCookie = (res, token) => {
  * @param {object} res - Express response
  */
 export const clearRefreshTokenCookie = (res) => {
-  res.clearCookie('refreshToken', {
+  res.clearCookie("refreshToken", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
   });
 };
 export default {

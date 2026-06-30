@@ -1,9 +1,9 @@
-import crypto from 'crypto';
-import bcrypt from 'bcryptjs';
+import crypto from "crypto";
+import bcrypt from "bcryptjs";
 
 /**
  * Hash a plain-text password using bcrypt.
- * @param {string} password 
+ * @param {string} password
  * @returns {Promise<string>}
  */
 export const hashPassword = async (password) => {
@@ -12,8 +12,8 @@ export const hashPassword = async (password) => {
 
 /**
  * Compare a plain-text password with its hashed version.
- * @param {string} password 
- * @param {string} hashedPassword 
+ * @param {string} password
+ * @param {string} hashedPassword
  * @returns {Promise<boolean>}
  */
 export const comparePassword = async (password, hashedPassword) => {
@@ -23,17 +23,17 @@ export const comparePassword = async (password, hashedPassword) => {
 /**
  * Hash an OTP using SHA-256 for secure DB storage.
  * Provides fast verification while protecting against database leak exposures.
- * @param {string} otp 
+ * @param {string} otp
  * @returns {string}
  */
 export const hashOtp = (otp) => {
-  return crypto.createHash('sha256').update(otp).digest('hex');
+  return crypto.createHash("sha256").update(otp).digest("hex");
 };
 
 /**
  * Compare a plain-text OTP with its hashed version.
- * @param {string} plainOtp 
- * @param {string} hashedOtp 
+ * @param {string} plainOtp
+ * @param {string} hashedOtp
  * @returns {boolean}
  */
 export const compareOtp = (plainOtp, hashedOtp) => {

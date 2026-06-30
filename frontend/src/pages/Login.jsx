@@ -1,26 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth.js';
-import { useToast } from '../components/Toast.jsx';
-import ThemeToggle from '../components/ThemeToggle.jsx';
-import ShowHidePassword from '../components/ShowHidePassword.jsx';
-import LoadingSpinner from '../components/LoadingSpinner.jsx';
-import '../styles/auth.css';
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth.js";
+import { useToast } from "../components/Toast.jsx";
+import ThemeToggle from "../components/ThemeToggle.jsx";
+import ShowHidePassword from "../components/ShowHidePassword.jsx";
+import LoadingSpinner from "../components/LoadingSpinner.jsx";
+import "../styles/auth.css";
 
 export const Login = () => {
   const { login } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Prepopulate email if "Remember Me" was previously active
   useEffect(() => {
-    const savedEmail = localStorage.getItem('rememberedEmail');
+    const savedEmail = localStorage.getItem("rememberedEmail");
     if (savedEmail) {
       setEmail(savedEmail);
       setRememberMe(true);
@@ -30,27 +30,27 @@ export const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
-      addToast('Please enter both email and password.', 'error');
+      addToast("Please enter both email and password.", "error");
       return;
     }
 
     setIsLoading(true);
     try {
       await login(email, password);
-      
+
       // Save or remove email based on "Remember Me" preference
       if (rememberMe) {
-        localStorage.setItem('rememberedEmail', email);
+        localStorage.setItem("rememberedEmail", email);
       } else {
-        localStorage.removeItem('rememberedEmail');
+        localStorage.removeItem("rememberedEmail");
       }
 
-      addToast('Logged in successfully!', 'success');
-      navigate('/');
+      addToast("Logged in successfully!", "success");
+      navigate("/");
     } catch (err) {
-      addToast(err.message, 'error');
+      addToast(err.message, "error");
       // If user has not verified email, auto-redirect to verification screen
-      if (err.message.toLowerCase().includes('not verified')) {
+      if (err.message.toLowerCase().includes("not verified")) {
         setTimeout(() => {
           navigate(`/verify-email?email=${encodeURIComponent(email)}`);
         }, 1500);
@@ -70,12 +70,16 @@ export const Login = () => {
       <div className="auth-card fade-in">
         <div className="auth-header">
           <h2 className="auth-title">Welcome Back</h2>
-          <p className="auth-subtitle">Log in to manage your account and settings</p>
+          <p className="auth-subtitle">
+            Log in to manage your account and settings
+          </p>
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label" htmlFor="login-email">Email Address</label>
+            <label className="form-label" htmlFor="login-email">
+              Email Address
+            </label>
             <input
               type="email"
               id="login-email"
@@ -88,10 +92,12 @@ export const Login = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="login-password">Password</label>
+            <label className="form-label" htmlFor="login-password">
+              Password
+            </label>
             <div className="input-container">
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 id="login-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

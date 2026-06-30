@@ -1,5 +1,15 @@
-import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
-import api, { setAccessToken, getAccessToken, setOnTokenRefreshed } from '../services/api.js';
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
+import api, {
+  setAccessToken,
+  getAccessToken,
+  setOnTokenRefreshed,
+} from "../services/api.js";
 
 export const AuthContext = createContext(null);
 
@@ -16,7 +26,7 @@ export const AuthProvider = ({ children }) => {
   // Fetch current profile details
   const fetchProfile = useCallback(async () => {
     try {
-      const response = await api.get('/auth/me');
+      const response = await api.get("/auth/me");
       setUser(response.data.data.user);
     } catch (error) {
       clearSession();
@@ -35,7 +45,7 @@ export const AuthProvider = ({ children }) => {
     const initializeAuth = async () => {
       try {
         // Trigger silent refresh using HttpOnly cookie
-        const response = await api.post('/auth/refresh-token');
+        const response = await api.post("/auth/refresh-token");
         const token = response.data.data.accessToken;
         setAccessToken(token);
         setUser(response.data.data.user);
@@ -60,13 +70,17 @@ export const AuthProvider = ({ children }) => {
 
   // Format Axios Error messages for easy handling
   const getErrorMessage = (error) => {
-    return error.response?.data?.message || error.message || 'An unexpected error occurred';
+    return (
+      error.response?.data?.message ||
+      error.message ||
+      "An unexpected error occurred"
+    );
   };
 
   // Actions
   const signup = async (userData) => {
     try {
-      const response = await api.post('/auth/signup', userData);
+      const response = await api.post("/auth/signup", userData);
       return response.data;
     } catch (error) {
       throw new Error(getErrorMessage(error));
@@ -75,7 +89,7 @@ export const AuthProvider = ({ children }) => {
 
   const verifyEmail = async (email, otp) => {
     try {
-      const response = await api.post('/auth/verify-email', { email, otp });
+      const response = await api.post("/auth/verify-email", { email, otp });
       return response.data;
     } catch (error) {
       throw new Error(getErrorMessage(error));
@@ -84,7 +98,7 @@ export const AuthProvider = ({ children }) => {
 
   const resendVerification = async (email) => {
     try {
-      const response = await api.post('/auth/resend-verification', { email });
+      const response = await api.post("/auth/resend-verification", { email });
       return response.data;
     } catch (error) {
       throw new Error(getErrorMessage(error));
@@ -93,7 +107,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post("/auth/login", { email, password });
       const { accessToken: token, user: userProfile } = response.data.data;
       setAccessToken(token);
       setUser(userProfile);
@@ -105,7 +119,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout');
+      await api.post("/auth/logout");
     } catch (error) {
       // Continue cleanup even if server route fails
     } finally {
@@ -115,7 +129,7 @@ export const AuthProvider = ({ children }) => {
 
   const logoutAll = async () => {
     try {
-      await api.post('/auth/logout-all');
+      await api.post("/auth/logout-all");
     } catch (error) {
       // Continue cleanup even if server route fails
     } finally {
@@ -125,7 +139,19 @@ export const AuthProvider = ({ children }) => {
 
   const forgotPassword = async (email) => {
     try {
-      const response = await api.post('/auth/forgot-password', { email });
+      const response = await api.post("/auth/forgot-password", { email });
+      return response.data;
+    } catch (error) {
+      throw new Error(getErrorMessage(error));
+    }
+  };
+
+  const verifyPasswordReset = async (email, otp) => {
+    try {
+      const response = await api.post("/auth/verify-password-reset", {
+        email,
+        otp,
+      });
       return response.data;
     } catch (error) {
       throw new Error(getErrorMessage(error));
@@ -134,7 +160,7 @@ export const AuthProvider = ({ children }) => {
 
   const resetPassword = async (email, otp, password, confirmPassword) => {
     try {
-      const response = await api.post('/auth/reset-password', {
+      const response = await api.post("/auth/reset-password", {
         email,
         otp,
         password,
@@ -156,6 +182,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     logoutAll,
     forgotPassword,
+    verifyPasswordReset,
     resetPassword,
   };
 

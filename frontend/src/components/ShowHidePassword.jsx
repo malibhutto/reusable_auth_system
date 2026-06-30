@@ -1,5 +1,5 @@
-import React from 'react';
-import '../styles/auth.css';
+import React from "react";
+import "../styles/auth.css";
 
 /**
  * Toggle button styled as overlay inside input container.
@@ -10,9 +10,9 @@ export const ShowHidePassword = ({ isVisible, onToggle }) => {
       type="button"
       className="input-icon-btn"
       onClick={onToggle}
-      aria-label={isVisible ? 'Hide Password' : 'Show Password'}
+      aria-label={isVisible ? "Hide Password" : "Show Password"}
     >
-      {isVisible ? '👁️' : '🙈'}
+      {isVisible ? "👁️" : "🙈"}
     </button>
   );
 };
