@@ -16,6 +16,7 @@ export const ResetPassword = () => {
 
   const [email, setEmail] = useState("");
   const [otpArray, setOtpArray] = useState(["", "", "", "", "", ""]);
+  const [verifiedOtp, setVerifiedOtp] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isOtpVerified, setIsOtpVerified] = useState(false);
@@ -154,6 +155,7 @@ export const ResetPassword = () => {
     setIsVerifyingOtp(true);
     try {
       await verifyPasswordReset(email, otpCode);
+      setVerifiedOtp(otpCode);
       setIsOtpVerified(true);
       setErrors({});
       addToast(
@@ -179,10 +181,9 @@ export const ResetPassword = () => {
 
     if (!validateForm()) return;
 
-    const otpCode = otpArray.join("");
     setIsSubmitting(true);
     try {
-      await resetPassword(email, otpCode, password, confirmPassword);
+      await resetPassword(email, verifiedOtp, password, confirmPassword);
       addToast("Password reset successfully! You can now log in.", "success");
       navigate("/login");
     } catch (err) {
@@ -208,62 +209,81 @@ export const ResetPassword = () => {
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
-          <div className="form-group">
-            <label className="form-label" htmlFor="reset-email">
-              Email Address
-            </label>
-            <input
-              type="email"
-              id="reset-email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (errors.email) setErrors((prev) => ({ ...prev, email: "" }));
-              }}
-              className={`form-input ${errors.email ? "input-error" : ""}`}
-              placeholder="john.doe@example.com"
-              required
-            />
-            {errors.email && (
-              <span className="error-message">{errors.email}</span>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Recovery Code</label>
-            <div className="otp-inputs-row">
-              {otpArray.map((digit, idx) => (
-                <input
-                  key={idx}
-                  ref={(el) => (inputRefs.current[idx] = el)}
-                  type="text"
-                  maxLength="1"
-                  value={digit}
-                  onChange={(e) => {
-                    handleOtpChange(idx, e.target.value);
-                    if (errors.otp) setErrors((prev) => ({ ...prev, otp: "" }));
-                  }}
-                  onKeyDown={(e) => handleKeyDown(idx, e)}
-                  onPaste={handlePaste}
-                  className={`otp-box ${errors.otp ? "input-error" : ""}`}
-                  pattern="[0-9]*"
-                  inputMode="numeric"
-                  autoFocus={idx === 0}
-                />
-              ))}
+          {!isOtpVerified ? (
+            <div className="form-group">
+              <label className="form-label" htmlFor="reset-email">
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="reset-email"
+                value={email}
+                onChange={(e) => {
+                  const nextEmail = e.target.value;
+                  if (isOtpVerified && nextEmail !== email) {
+                    setIsOtpVerified(false);
+                    setVerifiedOtp("");
+                  }
+                  setEmail(nextEmail);
+                  if (errors.email)
+                    setErrors((prev) => ({ ...prev, email: "" }));
+                }}
+                className={`form-input ${errors.email ? "input-error" : ""}`}
+                placeholder="john.doe@example.com"
+                required
+              />
+              {errors.email && (
+                <span className="error-message">{errors.email}</span>
+              )}
             </div>
-            {errors.otp && <span className="error-message">{errors.otp}</span>}
-          </div>
+          ) : (
+            <div className="form-group">
+              <div className="form-note">
+                Resetting password for <strong>{email}</strong>
+              </div>
+            </div>
+          )}
 
           {!isOtpVerified ? (
-            <button
-              type="button"
-              className="btn-submit"
-              onClick={handleVerifyOtp}
-              disabled={isVerifyingOtp}
-            >
-              {isVerifyingOtp ? "Verifying..." : "Verify Recovery Code"}
-            </button>
+            <>
+              <div className="form-group">
+                <label className="form-label">Recovery Code</label>
+                <div className="otp-inputs-row">
+                  {otpArray.map((digit, idx) => (
+                    <input
+                      key={idx}
+                      ref={(el) => (inputRefs.current[idx] = el)}
+                      type="text"
+                      maxLength="1"
+                      value={digit}
+                      onChange={(e) => {
+                        handleOtpChange(idx, e.target.value);
+                        if (errors.otp)
+                          setErrors((prev) => ({ ...prev, otp: "" }));
+                      }}
+                      onKeyDown={(e) => handleKeyDown(idx, e)}
+                      onPaste={handlePaste}
+                      className={`otp-box ${errors.otp ? "input-error" : ""}`}
+                      pattern="[0-9]*"
+                      inputMode="numeric"
+                      autoFocus={idx === 0}
+                    />
+                  ))}
+                </div>
+                {errors.otp && (
+                  <span className="error-message">{errors.otp}</span>
+                )}
+              </div>
+
+              <button
+                type="button"
+                className="btn-submit"
+                onClick={handleVerifyOtp}
+                disabled={isVerifyingOtp}
+              >
+                {isVerifyingOtp ? "Verifying..." : "Verify Recovery Code"}
+              </button>
+            </>
           ) : (
             <>
               <div className="form-group">
