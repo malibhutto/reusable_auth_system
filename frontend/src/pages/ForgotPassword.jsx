@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
-import { useToast } from "../components/Toast.jsx";
+import { useToast } from "../context/ToastContext.jsx";
 import ThemeToggle from "../components/ThemeToggle.jsx";
 import LoadingSpinner from "../components/LoadingSpinner.jsx";
 import "../styles/auth.css";
@@ -68,6 +68,7 @@ export const ForgotPassword = () => {
               className="form-input"
               placeholder="john.doe@example.com"
               required
+              autoComplete="email"
             />
           </div>
 

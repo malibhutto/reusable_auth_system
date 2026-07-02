@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
-import { useToast } from "../components/Toast.jsx";
+import { useToast } from "../context/ToastContext.jsx";
 import ThemeToggle from "../components/ThemeToggle.jsx";
 import ShowHidePassword from "../components/ShowHidePassword.jsx";
 import LoadingSpinner from "../components/LoadingSpinner.jsx";
@@ -88,6 +88,7 @@ export const Login = () => {
               className="form-input"
               placeholder="john.doe@example.com"
               required
+              autoComplete="email"
             />
           </div>
 
@@ -104,6 +105,7 @@ export const Login = () => {
                 className="form-input"
                 placeholder="••••••••"
                 required
+                autoComplete="current-password"
               />
               <ShowHidePassword
                 isVisible={showPassword}

@@ -1,40 +1,79 @@
-# Reusable Universal Authentication System
+# Universal Authentication System
 
-A production-ready, modular, secure, and highly reusable authentication system with an **Express.js (Node.js)** backend using **Prisma ORM (PostgreSQL)** and a **React.js** frontend with **Plain CSS** (no Tailwind).
+A production-ready, secure, full-stack authentication system built with modern web technologies.
 
-This system is built from the ground up to be **copied into future projects with minimal changes**. All authentication-related logic is strictly isolated from business layers.
+## Features
 
----
+### Security
 
-## Table of Contents
-1. [Tech Stack](#tech-stack)
-2. [Project Structure](#project-structure)
-3. [Environment Variables](#environment-variables)
-4. [Installation & Setup](#installation--setup)
-5. [Authentication Flow Details](#authentication-flow-details)
-6. [API Documentation](#api-documentation)
-7. [Reusability: How to Copy into Future Projects](#reusability-how-to-copy-into-future-projects)
-8. [Security Features](#security-features)
-9. [Troubleshooting & Support](#troubleshooting--support)
+- **JWT-based authentication** with short-lived access tokens (15 minutes) and long-lived refresh tokens (7 days)
+- **HttpOnly cookies** for refresh token storage (XSS-safe)
+- **Token rotation** on every refresh (prevents replay attacks)
+- **Database-backed token revocation** (instant session invalidation)
+- **Bcrypt password hashing** (cost factor 12)
+- **SHA-256 OTP hashing** for fast verification
+- **Rate limiting** on all auth endpoints (protects against brute force)
+- **User enumeration protection** on password reset flows
+- **CSRF protection** via `sameSite: strict` cookies
+- **Helmet.js** security headers
+- **Session limit enforcement** (5 concurrent sessions per user)
+
+### User Workflows
+
+- User registration with email verification (OTP-based)
+- Email verification with 6-digit numeric code
+- Login with email and password
+- Forgot password → OTP verification → password reset
+- Logout (single session)
+- Logout all devices (revokes all sessions)
+- Protected dashboard displaying user profile
+
+### Frontend
+
+- **React 19** with functional components and hooks
+- **React Router v6** for navigation
+- **Vite** for fast builds and HMR
+- **Axios** with automatic token refresh interceptor
+- **Dark mode** with `prefers-color-scheme` detection
+- **Accessible UI** with ARIA labels, live regions, semantic HTML
+- **Responsive design** optimized for mobile and desktop
+- **OTP input** with auto-focus, paste support, backspace navigation
+- **Password strength meter** with real-time feedback
+- **Toast notifications** for user feedback
+
+### Backend
+
+- **Express.js** REST API
+- **Prisma ORM** with PostgreSQL
+- **Nodemailer** for transactional emails (SMTP configurable)
+- **express-validator** for input validation
+- **Comprehensive error handling** with centralized middleware
+- **Database migrations** tracked in version control
+- **Automatic expired OTP cleanup** to prevent table bloat
 
 ---
 
 ## Tech Stack
 
 ### Backend
-* **Runtime**: Node.js & Express.js
-* **Database Interface**: Prisma ORM (mapped to PostgreSQL/Supabase)
-* **Authentication**: JWT (JSON Web Tokens) with Token Rotation
-* **Cryptographic Hashing**: `bcryptjs` (passwords) & `sha256` (OTPs)
-* **Mailer**: Nodemailer (customized with email template views)
-* **Security**: Helmet, CORS, Express Rate Limit, Cookie Parser
-* **Validator**: `express-validator`
+
+- Node.js >= 18
+- Express.js
+- Prisma (PostgreSQL)
+- JWT (jsonwebtoken)
+- Bcrypt
+- Nodemailer
+- Helmet.js
+- express-rate-limit
+- express-validator
 
 ### Frontend
-* **Core**: React.js (Vite bootstrapper)
-* **Routing**: React Router DOM (v6)
-* **HTTP Client**: Axios (configured with automated refresh interceptors)
-* **Styling**: Pure CSS (utilizing dynamic dark/light custom properties, HSL color maps, and micro-animations)
+
+- React 19
+- Vite 8
+- React Router v6
+- Axios
+- oxlint (for code quality)
 
 ---
 
@@ -44,234 +83,338 @@ This system is built from the ground up to be **copied into future projects with
 auth/
 ├── backend/
 │   ├── src/
-│   │   ├── config/          # Database (Prisma) and Mailer (SMTP) declarations
-│   │   ├── prisma/          # schema.prisma and seed scripts
-│   │   ├── controllers/     # Route controller orchestrators
-│   │   ├── routes/          # Express route bindings
-│   │   ├── middleware/      # Rate limits, validation, standard error catchers
-│   │   ├── services/        # Logic layers (Auth, Token, Email delivery)
-│   │   ├── utils/           # Hash wrappers, response helpers
-│   │   ├── validators/      # express-validator schemas
-│   │   ├── emails/          
-│   │   │   └── templates/   # Custom responsive HTML templates
-│   │   ├── app.js           # Express app configuring CORS, Helmet, and Parsers
-│   │   └── server.js        # Server listener bootstrap
+│   │   ├── config/           # Database and email transporter setup
+│   │   ├── controllers/      # Route handlers (thin layer)
+│   │   ├── middleware/       # Auth, error handling, rate limiting
+│   │   ├── routes/           # Express route definitions
+│   │   ├── services/         # Business logic (auth, email, tokens)
+│   │   ├── validators/       # Input validation rules
+│   │   ├── utils/            # Hashing, response formatting
+│   │   ├── emails/           # Email templates (HTML)
+│   │   ├── prisma/           # Schema, migrations, seed
+│   │   ├── app.js            # Express app setup
+│   │   └── server.js         # HTTP server entry point
 │   ├── .env.example
 │   └── package.json
-└── frontend/
-    ├── src/
-    │   ├── components/      # ThemeToggle, Toast, ProtectedRoute, PasswordMeter, etc.
-    │   ├── context/         # AuthContext state provider
-    │   ├── hooks/           # useAuth context hook
-    │   ├── pages/           # Signup, VerifyEmail, Login, recovery views
-    │   ├── services/        # Axios wrapper configuration (api.js)
-    │   ├── styles/          # Vanilla CSS layout sheets (theme.css, auth.css, etc.)
-    │   ├── App.jsx          # Route mapping definition
-    │   └── main.jsx         # App bootstrapping root
-    ├── .env.example
-    ├── index.html
-    └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── components/       # Reusable UI components
+│   │   ├── context/          # React Context (Auth)
+│   │   ├── hooks/            # Custom hooks (useAuth, useOtpInput)
+│   │   ├── pages/            # Route pages (Login, Signup, etc.)
+│   │   ├── services/         # API client (axios)
+│   │   ├── styles/           # CSS modules (theme, global, auth, components)
+│   │   ├── App.jsx           # Root component
+│   │   └── main.jsx          # React entry point
+│   ├── public/               # Static assets
+│   ├── index.html
+│   ├── .env.example
+│   └── package.json
+└── README.md
 ```
 
 ---
 
-## Environment Variables
+## Setup Instructions
 
-### Backend (`backend/.env`)
+### Prerequisites
 
-```ini
-# Server Port
+- Node.js >= 18
+- PostgreSQL (local or hosted, e.g., Supabase)
+- SMTP credentials (or use Mailtrap for testing)
+
+### 1. Clone the Repository
+
+```bash
+git clone <repository-url>
+cd auth
+```
+
+### 2. Backend Setup
+
+#### Install Dependencies
+
+```bash
+cd backend
+npm install
+```
+
+#### Configure Environment Variables
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your actual values:
+
+```env
 PORT=5000
 
-# Database Connection (PostgreSQL/Supabase)
+# PostgreSQL connection strings
 DATABASE_URL="postgresql://user:password@host:port/database?schema=public"
 DIRECT_URL="postgresql://user:password@host:port/database"
 
-# JWT Secrets (Use secure strings in production)
+# JWT secrets (generate strong random strings)
 JWT_SECRET="your-super-secret-access-token-key"
 JWT_REFRESH_SECRET="your-super-secret-refresh-token-key"
 
-# JWT Expirations
+# Token expiration durations
 ACCESS_TOKEN_EXPIRES="15m"
 REFRESH_TOKEN_EXPIRES="7d"
 
-# SMTP Email Configuration (Nodemailer credentials)
+# OTP expiration in minutes
+OTP_EXPIRES=10
+
+# SMTP configuration (Mailtrap for dev, SendGrid/AWS SES for production)
 EMAIL_HOST="smtp.mailtrap.io"
 EMAIL_PORT=2525
 EMAIL_USER="your-smtp-username"
 EMAIL_PASS="your-smtp-password"
 EMAIL_FROM="Universal Auth <noreply@yourdomain.com>"
 
-# Client application URL (Frontend origin)
+# Frontend URL (for CORS)
 CLIENT_URL="http://localhost:5173"
 ```
 
-### Frontend (`frontend/.env`)
+**IMPORTANT**: Never commit the `.env` file or use the fallback secrets in production.
 
-```ini
-# Base URL for the Express Backend API
-VITE_API_URL="http://localhost:5000/api"
-```
+#### Run Database Migrations
 
----
-
-## Installation & Setup
-
-### Prerequisites
-* Node.js (v18 or higher recommended)
-* A PostgreSQL instance (e.g., Supabase, RDS, local server)
-
-### 1. Clone & Set Up Backend
-```bash
-cd backend
-npm install
-```
-Copy `.env.example` to `.env` and fill in your connection strings and credentials:
-```bash
-cp .env.example .env
-```
-
-#### Run Database Migrations:
-Apply the database schemas to your database:
-```bash
-npm run prisma:migrate
-```
-Generate local client classes:
 ```bash
 npm run prisma:generate
+npm run prisma:migrate
 ```
 
-#### Seed Initial User:
-Populate the database with a default verified testing user (`john.doe@example.com` / `Password123!`):
+#### (Optional) Seed Database
+
 ```bash
 npm run prisma:seed
 ```
 
-#### Start Server:
-Run backend in development reload mode:
+This creates a test user:
+
+- Email: `john.doe@example.com`
+- Password: `Password123!`
+
+#### Start the Backend Server
+
 ```bash
 npm run dev
 ```
 
-### 2. Set Up Frontend
+Backend will run on `http://localhost:5000`
+
+---
+
+### 3. Frontend Setup
+
+#### Install Dependencies
+
 ```bash
 cd ../frontend
 npm install
 ```
-Copy `.env.example` to `.env`:
+
+#### Configure Environment Variables
+
 ```bash
 cp .env.example .env
 ```
-Start Vite development server:
+
+Edit `.env`:
+
+```env
+VITE_API_URL="http://localhost:5000/api"
+```
+
+#### Start the Frontend Dev Server
+
 ```bash
 npm run dev
 ```
 
----
-
-## Authentication Flow Details
-
-1. **Signup**:
-   * Users input fields. First and Last Name are vetted for alphabetic characters.
-   * Age verification calculates birth year difference (minimum 13 years required).
-   * Password requires length (8+ characters), upper, lower, numbers, and symbol characters.
-   * On submit, a 6-digit OTP is hashed and saved, and emailed to the user.
-2. **Verify Email**:
-   * A 2-minute countdown timer enforces OTP expiry.
-   * Users enter the OTP code. Successful checks toggle the account's `isVerified` attribute to `true`.
-3. **Login**:
-   * Blocks access to unverified emails.
-   * Valid logs return a short-lived memory Access Token and save a rotated long-lived Refresh Token in a secure HttpOnly cookie.
-4. **Forgot Password**:
-   * Prevents user enumeration (returns success even if the email does not exist).
-   * If the user exists, sends a 2-minute expiration OTP to clear their old login session, updating their profile on matching validation.
+Frontend will run on `http://localhost:5173`
 
 ---
 
-## API Documentation
+## Usage
 
-All routes prefix: `/api/auth`
-
-| Endpoint | Method | Authentication | Rate Limited | Payload Properties | Description |
-|---|---|---|---|---|---|
-| `/signup` | POST | None | Yes | `firstName`, `lastName`, `email`, `dob`, `password`, `confirmPassword` | Creates a new unverified user and sends email OTP |
-| `/verify-email` | POST | None | Yes | `email`, `otp` | Validates signup OTP code and activates account |
-| `/resend-verification` | POST | None | Yes | `email` | Generates and sends a new activation OTP |
-| `/login` | POST | None | Yes | `email`, `password` | Logs in, sets HttpOnly cookie, returns Access Token |
-| `/forgot-password` | POST | None | Yes | `email` | Sends password reset OTP (Prevents Enum Leaks) |
-| `/reset-password` | POST | None | Yes | `email`, `otp`, `password`, `confirmPassword` | Validates recovery OTP and updates user password |
-| `/refresh-token` | POST | None | No | Cookie: `refreshToken` | Implements token rotation and returns new tokens |
-| `/logout` | POST | None | No | Cookie: `refreshToken` | Clears local cookies and deletes DB session token |
-| `/logout-all` | POST | Bearer JWT | No | Header: `Authorization` | Deletes all active DB session tokens for user |
-| `/me` | GET | Bearer JWT | No | Header: `Authorization` | Returns profile fields of active user |
+1. Open `http://localhost:5173` in your browser
+2. **Sign Up**: Create a new account (you'll receive a 6-digit OTP)
+3. **Verify Email**: Enter the OTP sent to your email (check console logs if SMTP is not configured)
+4. **Login**: Use your email and password
+5. **Dashboard**: View your profile, logout, or logout all devices
+6. **Forgot Password**: Reset your password using OTP verification
 
 ---
 
-## Reusability: How to Copy into Future Projects
+## API Endpoints
 
-This repository was designed specifically to serve as a drop-in boilerplate for other web projects. Follow these steps to adopt it:
+### Authentication
 
-### Step 1: Copy directories
-Simply drag the folder structures into your new repository root:
-* Copy `backend/src/` (excluding node_modules)
-* Copy `frontend/src/` (excluding node_modules)
+- `POST /api/auth/signup` - Register a new user
+- `POST /api/auth/verify-email` - Verify email with OTP
+- `POST /api/auth/resend-verification` - Resend verification OTP
+- `POST /api/auth/login` - Authenticate user
+- `POST /api/auth/forgot-password` - Request password reset OTP
+- `POST /api/auth/verify-password-reset` - Verify password reset OTP
+- `POST /api/auth/reset-password` - Reset password with OTP
+- `POST /api/auth/refresh-token` - Refresh access token
+- `POST /api/auth/logout` - Revoke current session
+- `POST /api/auth/logout-all` - Revoke all user sessions (protected)
+- `GET /api/auth/me` - Get current user profile (protected)
 
-### Step 2: Configure Environment Variables
-You only need to supply:
-1. `DATABASE_URL` (new DB target)
-2. `JWT_SECRET` & `JWT_REFRESH_SECRET` (generate random strings)
-3. SMTP configuration details (`EMAIL_USER`, `EMAIL_PASS`, etc.)
-4. `CLIENT_URL` (the location of your new frontend application)
+### Health Check
 
-### Step 3: Run Database Migrations
-Prisma will sync automatically. Run inside your new backend folder:
+- `GET /health` - Server health status
+
+---
+
+## Database Schema
+
+### User
+
+- `id` (UUID, PK)
+- `firstName`, `lastName`
+- `email` (unique, indexed)
+- `age` (calculated from DOB)
+- `password` (bcrypt hashed)
+- `isVerified` (boolean)
+- `createdAt`, `updatedAt`
+
+### Otp
+
+- `id` (UUID, PK)
+- `userId` (FK → User, cascade delete)
+- `otp` (SHA-256 hashed)
+- `type` ("VERIFICATION" | "PASSWORD_RESET")
+- `expiresAt` (DateTime, indexed)
+- `isUsed` (boolean, indexed)
+- `createdAt`
+- **Composite index**: `[userId, type, isUsed, expiresAt]` for fast OTP lookups
+
+### RefreshToken
+
+- `id` (UUID, PK)
+- `token` (unique, indexed)
+- `userId` (FK → User, cascade delete, indexed)
+- `expiresAt` (DateTime)
+- `createdAt`
+
+---
+
+## Security Best Practices
+
+1. **Never commit `.env` files** — they contain secrets
+2. **Use strong, random JWT secrets** — generate with `openssl rand -base64 32`
+3. **Enable HTTPS in production** — set `secure: true` in cookie options
+4. **Configure CSP headers** — add a strict Content-Security-Policy
+5. **Use a managed secret store** — AWS Secrets Manager, Vault, etc.
+6. **Monitor rate limit hits** — detect brute force attempts
+7. **Rotate secrets regularly** — especially JWT secrets
+8. **Validate all user inputs** — on both frontend and backend
+9. **Log security events** — failed logins, token revocations, etc.
+10. **Run `npm audit`** regularly — fix vulnerabilities in dependencies
+
+---
+
+## Testing
+
+### Backend
+
 ```bash
-npx prisma db push
+cd backend
+# Add test scripts and run
+npm test
 ```
-*(or run `npx prisma migrate dev` to create formal schema tracks)*.
 
-### Step 4: Import Auth Services
-Use the standard Axios wrapper `api.js` on the frontend:
-```javascript
-import api from './services/api';
+### Frontend
 
-// All authentication headers, state refreshes, and cookie setups run under the hood.
-const getProjects = () => api.get('/projects');
+```bash
+cd frontend
+npm run lint  # oxlint for code quality
 ```
 
 ---
 
-## Security Features
+## Deployment
 
-* **Sql Injection Mitigation**: Inherently handled via Prisma ORM parameterized SQL query generation.
-* **XSS Mitigation**:
-  * Access Tokens are stored strictly in memory on the client side.
-  * Refresh Tokens are stored in HttpOnly cookies, protecting them from JavaScript readout.
-  * Security headers configured via `helmet`.
-* **User Enumeration Protection**: Recovering passwords returns identical payload signatures regardless of email registration status.
-* **Brute Force Protection**: Request limits are configured for sensitive routes (signup, login, resets) using `express-rate-limit`.
-* **OTP Protection**: Verification and recovery codes are hashed (using SHA-256) prior to database insertion.
+### Backend (Node.js hosting: Heroku, Render, Railway, AWS Elastic Beanstalk)
+
+1. Set environment variables (never commit `.env`)
+2. Run `npm run prisma:deploy` to apply migrations
+3. Start with `npm start`
+
+### Frontend (Static hosting: Vercel, Netlify, AWS S3 + CloudFront)
+
+1. Build with `npm run build`
+2. Deploy the `dist/` folder
+3. Configure environment variables for `VITE_API_URL`
+
+### Database (PostgreSQL)
+
+- Use a managed service: Supabase, Neon, AWS RDS, Google Cloud SQL
+- Enable connection pooling (PgBouncer) for high traffic
+- Configure automatic backups
+- Use read replicas for scaling reads
 
 ---
 
-## Troubleshooting & Support
+## Environment Variables Reference
 
-### Unconfigured SMTP transporter:
-* If email credentials are not set (or remain as placeholder values), the system will output the verification OTPs directly to the **backend console terminal output** inside a debug block like:
-  ```
-  🔑 DEV VERIFICATION OTP FOR [User]: XXXXXX
-  ```
-  You can copy and paste this code to test signup and reset paths instantly.
+### Backend
 
-### CORS Errors:
-* Make sure `CLIENT_URL` in backend matches the active port the frontend server is running on (e.g. `http://localhost:5173`).
+| Variable                | Description                                    | Example                     |
+| ----------------------- | ---------------------------------------------- | --------------------------- |
+| `PORT`                  | Server port                                    | `5000`                      |
+| `DATABASE_URL`          | PostgreSQL connection (with pooling)           | `postgresql://...`          |
+| `DIRECT_URL`            | PostgreSQL connection (direct, for migrations) | `postgresql://...`          |
+| `JWT_SECRET`            | Secret for access token signing                | Random 32+ char string      |
+| `JWT_REFRESH_SECRET`    | Secret for refresh token signing               | Random 32+ char string      |
+| `ACCESS_TOKEN_EXPIRES`  | Access token lifespan                          | `15m`, `1h`                 |
+| `REFRESH_TOKEN_EXPIRES` | Refresh token lifespan                         | `7d`, `30d`                 |
+| `OTP_EXPIRES`           | OTP validity in minutes                        | `10`                        |
+| `EMAIL_HOST`            | SMTP server hostname                           | `smtp.mailtrap.io`          |
+| `EMAIL_PORT`            | SMTP port                                      | `2525`, `587`, `465`        |
+| `EMAIL_USER`            | SMTP username                                  | `abc123`                    |
+| `EMAIL_PASS`            | SMTP password                                  | `xyz789`                    |
+| `EMAIL_FROM`            | Sender email address                           | `noreply@yourdomain.com`    |
+| `CLIENT_URL`            | Frontend origin (for CORS)                     | `https://yourdomain.com`    |
+| `NODE_ENV`              | Environment mode                               | `development`, `production` |
 
-### DB Migration Failures:
-* Verify that the database credentials in `DATABASE_URL` are correct.
-* If using Supabase, check connection strings and check if connection pooling vs session modes are set correctly.
+### Frontend
+
+| Variable       | Description          | Example                          |
+| -------------- | -------------------- | -------------------------------- |
+| `VITE_API_URL` | Backend API base URL | `https://api.yourdomain.com/api` |
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ---
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the ISC License.
+
+---
+
+## Support
+
+For issues and questions, please open an issue on the GitHub repository.
+
+---
+
+## Acknowledgments
+
+- Built with React, Express, Prisma, and PostgreSQL
+- Styled with custom CSS (glassmorphism design)
+- Email templates inspired by modern transactional email design
+- Security patterns based on OWASP recommendations

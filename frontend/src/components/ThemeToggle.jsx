@@ -3,7 +3,12 @@ import "../styles/components.css";
 
 export const ThemeToggle = () => {
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem("theme") || "light";
+    const stored = localStorage.getItem("theme");
+    if (stored) return stored;
+    // Respect OS-level preference on first visit
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
   });
 
   useEffect(() => {

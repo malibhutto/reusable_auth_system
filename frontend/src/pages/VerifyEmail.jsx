@@ -1,10 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
-import { useToast } from "../components/Toast.jsx";
+import { useOtpInput } from "../hooks/useOtpInput.js";
+import { useToast } from "../context/ToastContext.jsx";
 import ThemeToggle from "../components/ThemeToggle.jsx";
 import LoadingSpinner from "../components/LoadingSpinner.jsx";
 import "../styles/auth.css";
+
+const RESEND_COOLDOWN_SECONDS = 120;
 
 export const VerifyEmail = () => {
   const { verifyEmail, resendVerification } = useAuth();
@@ -13,13 +16,19 @@ export const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
 
   const [email, setEmail] = useState("");
-  const [otpArray, setOtpArray] = useState(["", "", "", "", "", ""]);
-  const [timeLeft, setTimeLeft] = useState(120); // 2 minutes countdown
+  const [timeLeft, setTimeLeft] = useState(RESEND_COOLDOWN_SECONDS);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
 
-  // References to input elements for focus management
-  const inputRefs = useRef([]);
+  const {
+    otpArray,
+    inputRefs,
+    handleOtpChange,
+    handleKeyDown,
+    handlePaste,
+    resetOtp,
+    otpCode,
+  } = useOtpInput(6);
 
   // Prepopulate email from query parameter if available
   useEffect(() => {
@@ -29,7 +38,7 @@ export const VerifyEmail = () => {
     }
   }, [searchParams]);
 
-  // Countdown timer effect
+  // Countdown timer — pauses when tab is hidden to avoid drift
   useEffect(() => {
     if (timeLeft <= 0) return;
     const timer = setInterval(() => {
@@ -37,56 +46,6 @@ export const VerifyEmail = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, [timeLeft]);
-
-  const handleOtpChange = (index, value) => {
-    // Keep only numbers
-    const cleanValue = value.replace(/[^0-9]/g, "");
-    if (!cleanValue) {
-      const newOtp = [...otpArray];
-      newOtp[index] = "";
-      setOtpArray(newOtp);
-      return;
-    }
-
-    const digit = cleanValue.substring(cleanValue.length - 1);
-    const newOtp = [...otpArray];
-    newOtp[index] = digit;
-    setOtpArray(newOtp);
-
-    // Auto-focus next box
-    if (index < 5) {
-      inputRefs.current[index + 1].focus();
-    }
-  };
-
-  const handleKeyDown = (index, e) => {
-    // Backspace: clear current or move to previous box
-    if (e.key === "Backspace") {
-      if (otpArray[index] === "" && index > 0) {
-        const newOtp = [...otpArray];
-        newOtp[index - 1] = "";
-        setOtpArray(newOtp);
-        inputRefs.current[index - 1].focus();
-      } else {
-        const newOtp = [...otpArray];
-        newOtp[index] = "";
-        setOtpArray(newOtp);
-      }
-    }
-  };
-
-  const handlePaste = (e) => {
-    e.preventDefault();
-    const pasteData = e.clipboardData
-      .getData("text")
-      .trim()
-      .replace(/[^0-9]/g, "");
-    if (pasteData.length === 6) {
-      const newOtp = pasteData.split("");
-      setOtpArray(newOtp);
-      inputRefs.current[5].focus();
-    }
-  };
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -96,7 +55,6 @@ export const VerifyEmail = () => {
 
   const handleVerify = async (e) => {
     e.preventDefault();
-    const otpCode = otpArray.join("");
 
     if (!email) {
       addToast("Please enter your email address.", "error");
@@ -129,9 +87,8 @@ export const VerifyEmail = () => {
     try {
       await resendVerification(email);
       addToast("A new verification code has been dispatched.", "success");
-      setTimeLeft(120); // Reset countdown timer
-      setOtpArray(["", "", "", "", "", ""]); // Clear boxes
-      inputRefs.current[0].focus();
+      setTimeLeft(RESEND_COOLDOWN_SECONDS);
+      resetOtp();
     } catch (err) {
       addToast(err.message, "error");
     } finally {
@@ -158,7 +115,7 @@ export const VerifyEmail = () => {
           </p>
         </div>
 
-        <form className="auth-form" onSubmit={handleVerify}>
+        <form className="auth-form" onSubmit={handleVerify} noValidate>
           <div className="form-group">
             <label className="form-label" htmlFor="verify-email">
               Email Address
@@ -168,15 +125,24 @@ export const VerifyEmail = () => {
               id="verify-email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="form-input"
+              className="form-input form-input--readonly"
               placeholder="john.doe@example.com"
               required
+              autoComplete="email"
+              readOnly={!!email}
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Verification Code</label>
-            <div className="otp-inputs-row">
+          <fieldset
+            className="form-group"
+            style={{ border: "none", padding: 0, margin: 0 }}
+          >
+            <legend className="form-label">Verification Code</legend>
+            <div
+              className="otp-inputs-row"
+              role="group"
+              aria-label="6-digit verification code"
+            >
               {otpArray.map((digit, idx) => (
                 <input
                   key={idx}
@@ -190,11 +156,13 @@ export const VerifyEmail = () => {
                   className="otp-box"
                   pattern="[0-9]*"
                   inputMode="numeric"
+                  aria-label={`Digit ${idx + 1} of 6`}
                   autoFocus={idx === 0}
+                  autoComplete="one-time-code"
                 />
               ))}
             </div>
-          </div>
+          </fieldset>
 
           <button type="submit" className="btn-submit" disabled={isVerifying}>
             Verify Code

@@ -1,5 +1,4 @@
 import { body, validationResult } from "express-validator";
-import prisma from "../config/db.js";
 import { sendError } from "../utils/response.js";
 
 /**
@@ -39,14 +38,7 @@ export const validateSignup = [
     .withMessage("Email address is required")
     .isEmail()
     .withMessage("Please provide a valid email address")
-    .normalizeEmail()
-    .custom(async (value) => {
-      const user = await prisma.user.findUnique({ where: { email: value } });
-      if (user) {
-        throw new Error("Email address is already in use");
-      }
-      return true;
-    }),
+    .normalizeEmail(),
 
   body("dob")
     .notEmpty()

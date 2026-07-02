@@ -1,17 +1,8 @@
-import React, {
-  createContext,
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-} from "react";
-import api, {
-  setAccessToken,
-  getAccessToken,
-  setOnTokenRefreshed,
-} from "../services/api.js";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import api, { setAccessToken, setOnTokenRefreshed } from "../services/api.js";
+import { AuthContext } from "./authContextInstance.js";
 
-export const AuthContext = createContext(null);
+export { AuthContext };
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -28,7 +19,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.get("/auth/me");
       setUser(response.data.data.user);
-    } catch (error) {
+    } catch {
       clearSession();
     }
   }, [clearSession]);
@@ -49,7 +40,7 @@ export const AuthProvider = ({ children }) => {
         const token = response.data.data.accessToken;
         setAccessToken(token);
         setUser(response.data.data.user);
-      } catch (error) {
+      } catch {
         clearSession();
       } finally {
         setLoading(false);
@@ -68,7 +59,7 @@ export const AuthProvider = ({ children }) => {
     });
   }, [user, fetchProfile]);
 
-  // Format Axios Error messages for easy handling
+  // Format Axios error messages for easy handling
   const getErrorMessage = (error) => {
     return (
       error.response?.data?.message ||
@@ -120,7 +111,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await api.post("/auth/logout");
-    } catch (error) {
+    } catch {
       // Continue cleanup even if server route fails
     } finally {
       clearSession();
@@ -130,7 +121,7 @@ export const AuthProvider = ({ children }) => {
   const logoutAll = async () => {
     try {
       await api.post("/auth/logout-all");
-    } catch (error) {
+    } catch {
       // Continue cleanup even if server route fails
     } finally {
       clearSession();
@@ -188,4 +179,5 @@ export const AuthProvider = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
 export default AuthContext;

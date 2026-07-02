@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
-import { useToast } from "../components/Toast.jsx";
+import { useToast } from "../context/ToastContext.jsx";
 import ThemeToggle from "../components/ThemeToggle.jsx";
 import PasswordStrengthMeter from "../components/PasswordStrengthMeter.jsx";
 import ShowHidePassword from "../components/ShowHidePassword.jsx";
@@ -164,9 +164,13 @@ export const Signup = () => {
                 className={`form-input ${errors.firstName ? "input-error" : ""}`}
                 placeholder="John"
                 required
+                maxLength={50}
+                autoComplete="given-name"
               />
               {errors.firstName && (
-                <span className="error-message">{errors.firstName}</span>
+                <span className="error-message" role="alert">
+                  {errors.firstName}
+                </span>
               )}
             </div>
 
@@ -183,9 +187,13 @@ export const Signup = () => {
                 className={`form-input ${errors.lastName ? "input-error" : ""}`}
                 placeholder="Doe"
                 required
+                maxLength={50}
+                autoComplete="family-name"
               />
               {errors.lastName && (
-                <span className="error-message">{errors.lastName}</span>
+                <span className="error-message" role="alert">
+                  {errors.lastName}
+                </span>
               )}
             </div>
           </div>
@@ -203,9 +211,12 @@ export const Signup = () => {
               className={`form-input ${errors.email ? "input-error" : ""}`}
               placeholder="john.doe@example.com"
               required
+              autoComplete="email"
             />
             {errors.email && (
-              <span className="error-message">{errors.email}</span>
+              <span className="error-message" role="alert">
+                {errors.email}
+              </span>
             )}
           </div>
 
@@ -221,8 +232,13 @@ export const Signup = () => {
               onChange={handleInputChange}
               className={`form-input ${errors.dob ? "input-error" : ""}`}
               required
+              autoComplete="bday"
             />
-            {errors.dob && <span className="error-message">{errors.dob}</span>}
+            {errors.dob && (
+              <span className="error-message" role="alert">
+                {errors.dob}
+              </span>
+            )}
           </div>
 
           <div className="form-group">
@@ -239,6 +255,7 @@ export const Signup = () => {
                 className={`form-input ${errors.password ? "input-error" : ""}`}
                 placeholder="••••••••"
                 required
+                autoComplete="new-password"
               />
               <ShowHidePassword
                 isVisible={showPassword}
@@ -249,7 +266,9 @@ export const Signup = () => {
               <PasswordStrengthMeter password={formData.password} />
             )}
             {errors.password && (
-              <span className="error-message">{errors.password}</span>
+              <span className="error-message" role="alert">
+                {errors.password}
+              </span>
             )}
           </div>
 
@@ -267,6 +286,7 @@ export const Signup = () => {
                 className={`form-input ${errors.confirmPassword ? "input-error" : ""}`}
                 placeholder="••••••••"
                 required
+                autoComplete="new-password"
               />
               <ShowHidePassword
                 isVisible={showConfirmPassword}
@@ -274,7 +294,9 @@ export const Signup = () => {
               />
             </div>
             {errors.confirmPassword && (
-              <span className="error-message">{errors.confirmPassword}</span>
+              <span className="error-message" role="alert">
+                {errors.confirmPassword}
+              </span>
             )}
           </div>
 

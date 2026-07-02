@@ -12,6 +12,21 @@ const otpExpiryMinutes = Number(process.env.OTP_EXPIRES) || 10;
 const otpExpiryMs = otpExpiryMinutes * 60 * 1000;
 
 /**
+ * Lazily purge expired OTPs to prevent table bloat.
+ * Called during OTP creation operations.
+ */
+const cleanupExpiredOtps = async () => {
+  try {
+    await prisma.otp.deleteMany({
+      where: { expiresAt: { lt: new Date() } },
+    });
+  } catch {
+    // Non-critical — log but do not surface to caller
+    console.warn("⚠️ Failed to cleanup expired OTPs");
+  }
+};
+
+/**
  * Remove sensitive password field from user objects.
  */
 const excludePassword = (user) => {
@@ -77,6 +92,9 @@ export const signup = async (userData) => {
       expiresAt,
     },
   });
+
+  // Fire-and-forget cleanup of expired OTPs
+  cleanupExpiredOtps();
   // console.log("date now", new Date().toISOString());
   // console.log("expire at", expiresAt.toISOString());
 
@@ -169,6 +187,7 @@ export const resendVerification = async (email) => {
 
 /**
  * Authenticate credentials, check verification, and return session tokens.
+ * Enforces a maximum of 5 concurrent sessions per user (oldest revoked first).
  */
 export const login = async (email, password) => {
   const user = await prisma.user.findUnique({ where: { email } });
@@ -185,6 +204,23 @@ export const login = async (email, password) => {
   // Enforce email verification before login
   if (!user.isVerified) {
     throw new Error("Email is not verified. Please verify your email first.");
+  }
+
+  // Enforce session limit: revoke oldest tokens if the user already has 5 active sessions
+  const MAX_SESSIONS = 5;
+  const existingTokens = await prisma.refreshToken.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: "asc" },
+  });
+
+  if (existingTokens.length >= MAX_SESSIONS) {
+    const tokensToRevoke = existingTokens.slice(
+      0,
+      existingTokens.length - MAX_SESSIONS + 1,
+    );
+    await prisma.refreshToken.deleteMany({
+      where: { id: { in: tokensToRevoke.map((t) => t.id) } },
+    });
   }
 
   // Generate Tokens
@@ -232,8 +268,8 @@ export const forgotPassword = async (email) => {
     },
   });
 
-  // console.log("password reset request created at", new Date().toISOString());
-  // console.log("password reset expires at", expiresAt.toISOString());
+  // Fire-and-forget cleanup of expired OTPs
+  cleanupExpiredOtps();
 
   await emailService.sendForgotPasswordEmail(user.email, user.firstName, otp);
   return true;
@@ -241,11 +277,14 @@ export const forgotPassword = async (email) => {
 
 /**
  * Verify password reset OTP without changing the password.
+ * Returns true regardless of whether the email exists to prevent user enumeration.
  */
 export const verifyPasswordReset = async (email, otpCode) => {
   const user = await prisma.user.findUnique({ where: { email } });
+
+  // Return a generic error that does not reveal whether the user exists
   if (!user) {
-    throw new Error("User not found");
+    throw new Error("Invalid or expired recovery code");
   }
 
   const hashedOtpVal = hashOtp(otpCode);
@@ -271,8 +310,10 @@ export const verifyPasswordReset = async (email, otpCode) => {
  */
 export const resetPassword = async (email, otpCode, newPassword) => {
   const user = await prisma.user.findUnique({ where: { email } });
+
+  // Use the same generic error to prevent user enumeration
   if (!user) {
-    throw new Error("User not found");
+    throw new Error("Invalid or expired password recovery code");
   }
 
   const hashedOtpVal = hashOtp(otpCode);

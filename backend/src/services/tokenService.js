@@ -1,10 +1,15 @@
 import jwt from "jsonwebtoken";
 import prisma from "../config/db.js";
 
-// Load secrets with fallbacks
-const JWT_SECRET = process.env.JWT_SECRET || "fallback-jwt-secret";
-const JWT_REFRESH_SECRET =
-  process.env.JWT_REFRESH_SECRET || "fallback-jwt-refresh-secret";
+// Fail fast if secrets are missing — never fall back to weak hard-coded values
+if (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET) {
+  throw new Error(
+    "FATAL: JWT_SECRET and JWT_REFRESH_SECRET must be set in environment variables.",
+  );
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 const ACCESS_TOKEN_EXPIRES = process.env.ACCESS_TOKEN_EXPIRES || "15m";
 const REFRESH_TOKEN_EXPIRES = process.env.REFRESH_TOKEN_EXPIRES || "7d";
 
@@ -142,7 +147,7 @@ export const setRefreshTokenCookie = (res, token) => {
   res.cookie("refreshToken", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "strict",
     path: "/",
     maxAge: ms,
   });
@@ -156,7 +161,7 @@ export const clearRefreshTokenCookie = (res) => {
   res.clearCookie("refreshToken", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "strict",
     path: "/",
   });
 };

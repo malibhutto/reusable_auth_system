@@ -11,7 +11,8 @@ import {
  * @param {string} otp
  */
 export const sendVerificationEmail = async (email, firstName, otp) => {
-  const html = getVerificationEmailTemplate(firstName, otp);
+  const expiryMinutes = Number(process.env.OTP_EXPIRES) || 10;
+  const html = getVerificationEmailTemplate(firstName, otp, expiryMinutes);
   const mailOptions = {
     from: process.env.EMAIL_FROM || '"Universal Auth" <noreply@yourdomain.com>',
     to: email,
@@ -32,10 +33,17 @@ export const sendVerificationEmail = async (email, firstName, otp) => {
     await transporter.sendMail(mailOptions);
     console.log(`✉️ Verification email sent successfully to ${email}`);
   } catch (error) {
-    console.log("\n📧 ===============================================");
-    console.log(`⚠️ EMAIL SEND FAIL to [${email}]: ${error.message}`);
-    console.log(`🔑 DEV VERIFICATION OTP FOR [${firstName}]: ${otp}`);
-    console.log("==================================================\n");
+    if (process.env.NODE_ENV === "production") {
+      // Do not expose OTP codes in production logs — alert operations team instead
+      console.error(
+        `❌ Failed to send verification email to ${email}: ${error.message}`,
+      );
+    } else {
+      console.log("\n📧 ===============================================");
+      console.log(`⚠️ EMAIL SEND FAIL to [${email}]: ${error.message}`);
+      console.log(`🔑 DEV VERIFICATION OTP FOR [${firstName}]: ${otp}`);
+      console.log("==================================================\n");
+    }
   }
 };
 
@@ -46,7 +54,8 @@ export const sendVerificationEmail = async (email, firstName, otp) => {
  * @param {string} otp
  */
 export const sendForgotPasswordEmail = async (email, firstName, otp) => {
-  const html = getForgotPasswordEmailTemplate(firstName, otp);
+  const expiryMinutes = Number(process.env.OTP_EXPIRES) || 10;
+  const html = getForgotPasswordEmailTemplate(firstName, otp, expiryMinutes);
   const mailOptions = {
     from: process.env.EMAIL_FROM || '"Universal Auth" <noreply@yourdomain.com>',
     to: email,
@@ -67,10 +76,17 @@ export const sendForgotPasswordEmail = async (email, firstName, otp) => {
     await transporter.sendMail(mailOptions);
     console.log(`✉️ Password recovery email sent successfully to ${email}`);
   } catch (error) {
-    console.log("\n📧 ===============================================");
-    console.log(`⚠️ EMAIL SEND FAIL to [${email}]: ${error.message}`);
-    console.log(`🔑 DEV PASSWORD RECOVERY OTP FOR [${firstName}]: ${otp}`);
-    console.log("==================================================\n");
+    if (process.env.NODE_ENV === "production") {
+      // Do not expose OTP codes in production logs — alert operations team instead
+      console.error(
+        `❌ Failed to send password recovery email to ${email}: ${error.message}`,
+      );
+    } else {
+      console.log("\n📧 ===============================================");
+      console.log(`⚠️ EMAIL SEND FAIL to [${email}]: ${error.message}`);
+      console.log(`🔑 DEV PASSWORD RECOVERY OTP FOR [${firstName}]: ${otp}`);
+      console.log("==================================================\n");
+    }
   }
 };
 export default { sendVerificationEmail, sendForgotPasswordEmail };

@@ -1,50 +1,35 @@
 import React from "react";
+import { getPasswordStrengthScore } from "../utils/passwordStrength.js";
 import "../styles/components.css";
 
-/**
- * Calculates password complexity index dynamically.
- * @param {string} pass
- * @returns {number} 0-4 complexity index
- */
-export const getPasswordStrengthScore = (pass) => {
-  let score = 0;
-  if (!pass) return score;
+const STRENGTH_LABELS = [
+  "Empty",
+  "Weak (Add upper/lower/numbers/symbols)",
+  "Fair (Better, but not secure)",
+  "Good (Almost there)",
+  "Strong (Excellent complexity)",
+];
 
-  if (pass.length >= 8) score++; // length
-  if (/[A-Z]/.test(pass)) score++; // uppercase
-  if (/[a-z]/.test(pass) && /[0-9]/.test(pass)) score++; // lowercase & digit
-  if (/[^A-Za-z0-9]/.test(pass)) score++; // special char
-
-  return score;
-};
-
-export const PasswordStrengthMeter = ({ password }) => {
+const PasswordStrengthMeter = ({ password }) => {
   const score = getPasswordStrengthScore(password);
 
-  const getLabel = (strengthScore) => {
-    switch (strengthScore) {
-      case 0:
-        return "Empty";
-      case 1:
-        return "Weak (Add upper/lower/numbers/symbols)";
-      case 2:
-        return "Fair (Better, but not secure)";
-      case 3:
-        return "Good (Almost there)";
-      case 4:
-        return "Strong (Excellent complexity)";
-      default:
-        return "Empty";
-    }
-  };
-
   return (
-    <div className={`strength-meter-wrapper strength-${score}`}>
+    <div
+      className={`strength-meter-wrapper strength-${score}`}
+      aria-label={`Password strength: ${STRENGTH_LABELS[score]}`}
+    >
       <div className="strength-text">
         <span>Strength:</span>
-        <span className="strength-label">{getLabel(score)}</span>
+        <span className="strength-label">{STRENGTH_LABELS[score]}</span>
       </div>
-      <div className="strength-meter-track">
+      <div
+        className="strength-meter-track"
+        role="progressbar"
+        aria-valuenow={score * 25}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Password strength"
+      >
         <div className="strength-meter-bar"></div>
       </div>
     </div>

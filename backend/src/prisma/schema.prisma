@@ -34,6 +34,7 @@ model Otp {
   isUsed    Boolean  @default(false)
   createdAt DateTime @default(now())
 
+  @@index([userId, type, isUsed, expiresAt])
   @@map("otps")
 }
 
@@ -45,5 +46,6 @@ model RefreshToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
+  @@index([userId])
   @@map("refresh_tokens")
 }
